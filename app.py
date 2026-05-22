@@ -33,7 +33,7 @@ def send_summary():
     global timer_running
 
     # Wait before sending summary
-    time.sleep(45)
+    time.sleep(90)
 
     parsed_alerts = {}
 
