@@ -92,7 +92,7 @@ def send_summary():
 
     if alerts:
 
-        message = "📊 DAILY BREAKOUTS\n\n"
+        message = "📊 DAILY RSI BREAKOUTS\n```"
 
         message += (
             "┌────────────┬────────┬──────────────┬────────┐\n"
@@ -115,8 +115,10 @@ def send_summary():
             )
 
         message += (
-            "└────────────┴────────┴──────────────┴────────┘"
+        "└────────────┴────────┴──────────────┴────────┘"
         )
+
+        message += "\n```"
 
         # =========================
         # ROTATE WEBHOOK
