@@ -92,7 +92,7 @@ def send_summary():
 
     if alerts:
 
-        message = "📊 DAILY RSI BREAKOUTS\n\n"
+        message = "📊 DAILY BREAKOUTS\n\n"
 
         message += (
             "┌────────────┬────────┬──────────────┬────────┐\n"
