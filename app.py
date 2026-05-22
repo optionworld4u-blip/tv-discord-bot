@@ -95,32 +95,25 @@ def send_summary():
         message = "📊 DAILY BREAKOUTS\n```"
 
         message += (
-            "+---------+----------------+----------+----------------+--------+\n"
-            "| Sr. No. |     STOCK      |  CLOSE   |  CROSS ABOVE   |  RSI   |\n"
-            "+---------+----------------+----------+----------------+--------+\n"
+            "|     STOCK      |  CLOSE   | CROSS ABOVE |  RSI  |\n"
+            "|----------------|----------|-------------|-------|\n"
         )
 
-        for idx, a in enumerate(alerts, start=1):
+        for a in alerts:
 
-            sr = str(idx).center(7)
             stock = f"{a['ticker']:^14}"[:14]
             close = f"{a['close']:.2f}".center(8)
-            cross = f"{a['cross']:.2f}".center(14)
-            rsi = f"{a['rsi']:.2f}".center(6)
+            cross = f"{a['cross']:.2f}".center(11)
+            rsi = f"{a['rsi']:.2f}".center(5)
 
             message += (
-                f"| {sr} | "
-                f"{stock} | "
+                f"| {stock} | "
                 f"{close} | "
                 f"{cross} | "
                 f"{rsi} |\n"
             )
 
-        message += (
-            "+---------+----------------+----------+----------------+--------+"
-        )
-
-        message += "\n```"
+        message += "```"
 
         # =========================
         # ROTATE WEBHOOK
