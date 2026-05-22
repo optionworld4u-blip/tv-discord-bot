@@ -32,34 +32,118 @@ def send_summary():
     global alert_buffer
     global timer_running
 
-    # Wait 2 minutes
-    time.sleep(120)
+    # Wait before sending summary
+    time.sleep(45)
 
-    # Remove duplicates
-    unique_alerts = list(set(alert_buffer))
+    parsed_alerts = {}
 
-    if unique_alerts:
+    # =========================
+    # PARSE ALERTS
+    # =========================
 
-        message = "📊 DAILY ALERTS\n\n"
+    for msg in alert_buffer:
 
-        message += "\n".join(unique_alerts)
+        try:
 
-        # Rotate webhook
+            # Example:
+            # TECHNOE Close: 1339.90 Crossed Above: 1335.6 RSI: 67.20
+
+            parts = msg.split(" RSI: ")
+
+            left = parts[0]
+            rsi = float(parts[1])
+
+            ticker = left.split(" Close: ")[0]
+
+            close_part = left.split(" Close: ")[1]
+
+            close = float(
+                close_part.split(" Crossed Above: ")[0]
+            )
+
+            cross = float(
+                left.split(" Crossed Above: ")[1]
+            )
+
+            parsed_alerts[ticker] = {
+                "ticker": ticker,
+                "close": close,
+                "cross": cross,
+                "rsi": rsi
+            }
+
+        except:
+            pass
+
+    alerts = list(parsed_alerts.values())
+
+    # =========================
+    # SORT BY RSI DESCENDING
+    # =========================
+
+    alerts.sort(
+        key=lambda x: x["rsi"],
+        reverse=True
+    )
+
+    # =========================
+    # BUILD MESSAGE
+    # =========================
+
+    if alerts:
+
+        message = "📊 DAILY RSI BREAKOUTS\n\n"
+
+        message += (
+            "┌────────────┬────────┬──────────────┬────────┐\n"
+            "│ STOCK      │ CLOSE  │ CROSS ABOVE  │ RSI    │\n"
+            "├────────────┼────────┼──────────────┼────────┤\n"
+        )
+
+        for a in alerts:
+
+            stock = f"{a['ticker']:<10}"[:10]
+            close = f"{a['close']:.2f}"[:7]
+            cross = f"{a['cross']:.2f}"[:12]
+            rsi = f"{a['rsi']:.2f}"[:6]
+
+            message += (
+                f"│ {stock:<10} │ "
+                f"{close:>6} │ "
+                f"{cross:>12} │ "
+                f"{rsi:>6} │\n"
+            )
+
+        message += (
+            "└────────────┴────────┴──────────────┴────────┘"
+        )
+
+        # =========================
+        # ROTATE WEBHOOK
+        # =========================
+
         webhook = DISCORD_WEBHOOKS[
             int(time.time()) % len(DISCORD_WEBHOOKS)
         ]
+
+        # =========================
+        # SEND TO DISCORD
+        # =========================
 
         requests.post(
             webhook,
             json={"content": message}
         )
 
-    # Reset
+    # =========================
+    # RESET
+    # =========================
+
     alert_buffer = []
     timer_running = False
 
 # =========================
-# WEBHOOK
+# WEBHOOK ENDPOINT
 # =========================
 
 @app.route("/webhook", methods=["POST"])
@@ -72,14 +156,15 @@ def webhook():
 
     message = data.get("content", "")
 
+    # Ignore empty alerts
     if not message:
         return "No message", 400
 
-    # Add unique only
+    # Prevent duplicates
     if message not in alert_buffer:
         alert_buffer.append(message)
 
-    # Start timer once
+    # Start timer only once
     if not timer_running:
 
         timer_running = True
