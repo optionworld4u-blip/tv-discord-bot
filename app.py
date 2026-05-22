@@ -5,7 +5,7 @@ import time
 
 app = Flask(__name__)
 
-# ========================================================
+# =========================================================
 # DISCORD WEBHOOKS
 # =========================================================
 
@@ -28,38 +28,48 @@ DISCORD_WEBHOOKS = {
 }
 
 # =========================================================
-# STORAGE
+# MARKET-WISE STORAGE
 # =========================================================
 
-alert_buffer = []
-timer_running = False
+market_buffers = {
+    "nse": [],
+    "sp500": []
+}
+
+market_timers = {
+    "nse": False,
+    "sp500": False
+}
 
 # =========================================================
 # SEND SUMMARY
 # =========================================================
 
-def send_summary():
+def send_summary(market):
 
-    global alert_buffer
-    global timer_running
+    global market_buffers
+    global market_timers
 
-    # Wait before sending consolidated alert
+    # Wait before sending summary
     time.sleep(45)
 
     parsed_alerts = {}
 
     # =====================================================
+    # GET MARKET BUFFER
+    # =====================================================
+
+    buffer = market_buffers[market]
+
+    # =====================================================
     # PARSE ALERTS
     # =====================================================
 
-    for item in alert_buffer:
-
-        market = item["market"]
-        msg = item["message"]
+    for msg in buffer:
 
         try:
 
-            # Example message:
+            # Example:
             # TECHNOE Close: 1339.90 Crossed Above: 1335.6 RSI: 67.20
 
             parts = msg.split(" RSI: ")
@@ -83,8 +93,7 @@ def send_summary():
                 "ticker": ticker,
                 "close": close,
                 "cross": cross,
-                "rsi": rsi,
-                "market": market
+                "rsi": rsi
             }
 
         except:
@@ -107,16 +116,17 @@ def send_summary():
 
     if alerts:
 
-        market = alerts[0]["market"]
-
-        # Header based on market
+        # Market-specific title
         if market == "nse":
             message = "📊 NSE DAILY BREAKOUTS\n\n"
+
         elif market == "sp500":
             message = "📊 S&P500 DAILY BREAKOUTS\n\n"
+
         else:
             message = "📊 DAILY BREAKOUTS\n\n"
 
+        # Add stock alerts
         for idx, a in enumerate(alerts, start=1):
 
             message += (
@@ -127,7 +137,7 @@ def send_summary():
             )
 
         # =================================================
-        # SELECT WEBHOOK GROUP
+        # SELECT WEBHOOK
         # =================================================
 
         market_webhooks = DISCORD_WEBHOOKS.get(market, [])
@@ -148,11 +158,11 @@ def send_summary():
             )
 
     # =====================================================
-    # RESET
+    # RESET MARKET BUFFER
     # =====================================================
 
-    alert_buffer = []
-    timer_running = False
+    market_buffers[market] = []
+    market_timers[market] = False
 
 # =========================================================
 # WEBHOOK ENDPOINT
@@ -161,8 +171,12 @@ def send_summary():
 @app.route("/webhook/<market>", methods=["POST"])
 def webhook(market):
 
-    global alert_buffer
-    global timer_running
+    global market_buffers
+    global market_timers
+
+    # Invalid market protection
+    if market not in market_buffers:
+        return "Invalid market", 400
 
     data = request.json
 
@@ -172,22 +186,35 @@ def webhook(market):
     if not message:
         return "No message", 400
 
-    # Store alert
-    alert_buffer.append({
-        "market": market,
-        "message": message
-    })
+    # =====================================================
+    # ADD TO MARKET BUFFER
+    # =====================================================
 
-    # Start timer once
-    if not timer_running:
+    if message not in market_buffers[market]:
+        market_buffers[market].append(message)
 
-        timer_running = True
+    # =====================================================
+    # START MARKET TIMER
+    # =====================================================
+
+    if not market_timers[market]:
+
+        market_timers[market] = True
 
         threading.Thread(
-            target=send_summary
+            target=send_summary,
+            args=(market,)
         ).start()
 
     return "OK", 200
+
+# =========================================================
+# HOME ROUTE
+# =========================================================
+
+@app.route("/")
+def home():
+    return "TradingView Discord Bot Running"
 
 # =========================================================
 # START SERVER
