@@ -99,7 +99,7 @@ def send_summary():
             message += (
                 f"{idx}. {a['ticker']}\n"
                 f"Close         : {a['close']:.2f}\n"
-                f"Cross ↑      : {a['cross']:.2f}\n"
+                f"Cross ↑     : {a['cross']:.2f}\n"
                 f"RSI            : {a['rsi']:.2f}\n\n"
             )
 
