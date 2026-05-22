@@ -33,7 +33,7 @@ def send_summary():
     global timer_running
 
     # Wait before sending summary
-    time.sleep(90)
+    time.sleep(45)
 
     parsed_alerts = {}
 
@@ -92,30 +92,32 @@ def send_summary():
 
     if alerts:
 
-        message = "📊 DAILY RSI BREAKOUTS\n```"
+        message = "📊 DAILY BREAKOUTS\n```"
 
         message += (
-            "┌────────────┬────────┬──────────────┬────────┐\n"
-            "│ STOCK      │ CLOSE  │ CROSS ABOVE  │ RSI    │\n"
-            "├────────────┼────────┼──────────────┼────────┤\n"
+            "+---------+----------------+----------+----------------+--------+\n"
+            "| Sr. No. |     STOCK      |  CLOSE   |  CROSS ABOVE   |  RSI   |\n"
+            "+---------+----------------+----------+----------------+--------+\n"
         )
 
-        for a in alerts:
+        for idx, a in enumerate(alerts, start=1):
 
-            stock = f"{a['ticker']:<10}"[:10]
-            close = f"{a['close']:.2f}"[:7]
-            cross = f"{a['cross']:.2f}"[:12]
-            rsi = f"{a['rsi']:.2f}"[:6]
+            sr = str(idx).center(7)
+            stock = f"{a['ticker']:^14}"[:14]
+            close = f"{a['close']:.2f}".center(8)
+            cross = f"{a['cross']:.2f}".center(14)
+            rsi = f"{a['rsi']:.2f}".center(6)
 
             message += (
-                f"│ {stock:<10} │ "
-                f"{close:>6} │ "
-                f"{cross:>12} │ "
-                f"{rsi:>6} │\n"
+                f"| {sr} | "
+                f"{stock} | "
+                f"{close} | "
+                f"{cross} | "
+                f"{rsi} |\n"
             )
 
         message += (
-        "└────────────┴────────┴──────────────┴────────┘"
+            "+---------+----------------+----------+----------------+--------+"
         )
 
         message += "\n```"
