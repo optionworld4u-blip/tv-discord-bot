@@ -118,13 +118,13 @@ def send_summary(market):
 
         # Market-specific title
         if market == "nse":
-            message = "DAILY BREAKOUTS\n"
+            message = "RANGE BREAKOUTS\n"
 
         elif market == "sp500":
-            message = "DAILY BREAKOUTS\n"
+            message = "RANGE BREAKOUTS\n"
 
         else:
-            message = "DAILY BREAKOUTS\n"
+            message = "RANGE BREAKOUTS\n"
 
         # Add stock alerts
         for idx, a in enumerate(alerts, start=1):
